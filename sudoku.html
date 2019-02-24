@@ -1,0 +1,67 @@
+<meta charset="utf8">
+<center>
+	<h1>Sudoku :</h1>
+	<br/>
+	Limite de l'arbre de possibilitées : <input type="text" id="limitTree" value="2"/>
+	<br/>
+	<br/>
+	<textarea style="width: 250px; height: 250px;" id="sudoku"></textarea>
+	<input type="button" value="Solution" onclick="getSolution()" />
+	<br/>
+	<div id="solution"></div>
+</center>
+
+<script src="/sudoku.js"></script>
+<script>
+"use strict";
+
+function getSolution(){
+	let sudoku = [];
+	const txtSudoku = document.getElementById("sudoku").value.split("\n");
+	for (let i=0;i<txtSudoku.length;i++) {
+		if (txtSudoku[i] != "") {
+			sudoku.push([]);
+			const txtSudokuLine = txtSudoku[i].split(",");
+			for (let j=0;j<txtSudokuLine.length;j++) {
+				if (txtSudokuLine[j] != "") {
+					if (isNaN(parseInt(txtSudokuLine[j]))) {
+						document.getElementById("solution").innerHTML = "<font size='4' color='red'>Format du tableau incorrect</font>";
+						return;
+					}
+					sudoku[sudoku.length-1].push(parseInt(txtSudokuLine[j]));
+				}
+			}
+		}
+	}
+	if (sudoku.length != 9) {
+		document.getElementById("solution").innerHTML = "<font size='4' color='red'>Format du tableau incorrect</font>";
+		return;
+	}
+	for (let l=0;l<sudoku.length;l++) {
+		if (sudoku[l].length != 9) {
+			document.getElementById("solution").innerHTML = "<font size='4' color='red'>Format du tableau incorrect</font>";
+			return;
+		}
+	}
+
+	const limitTree = parseInt(document.getElementById("limitTree").value);
+
+	resolvSudoku(sudoku,limitTree, (sudoku,msg) => {
+		let str = "";
+		for (let l=0;l<sudoku.length;l++) {
+			for (let c=0;c<sudoku[l].length;c++) {
+				if (c%3 == 0) {
+					str += "&nbsp;&nbsp;";
+				}
+				str += sudoku[l][c]+",";
+			}
+			str += "<br/>";
+			if ((l+1)%3 == 0) {
+				str += "<br/>";
+			}
+		}
+		document.getElementById("solution").innerHTML = str+"<br/>"+msg;
+	});
+	
+}
+</script>

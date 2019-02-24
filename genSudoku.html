@@ -1,0 +1,167 @@
+<meta charset="utf-8">
+<center>
+	Niveau de difficulté : 
+	<select id="dificult">
+		<option value="debutant">Débutant</option>
+		<option value="facile">Facile</option>
+		<option value="comfirme">Confirmé</option>
+		<option value="expert">Expert</option>
+		<option value="diabolique">Diabolique</option>
+	</select>
+	<br/>
+	<input type="button" onclick="genSudoku()" value="Génerer le sudoku">
+	<div id="solution"></div>
+</center>
+<script src="sudoku.js"></script>
+<script>
+const genNumber = () => Math.round(1+Math.random()*8);
+
+let sudokuBlank = [[0,0,0,  0,0,0,  0,0,0],
+			  	   [0,0,0,  0,0,0,  0,0,0],
+			  	   [0,0,0,  0,0,0,  0,0,0],
+
+	 			   [0,0,0,  0,0,0,  0,0,0],
+				   [0,0,0,  0,0,0,  0,0,0],
+			  	   [0,0,0,  0,0,0,  0,0,0],
+
+			  	   [0,0,0,  0,0,0,  0,0,0],
+			  	   [0,0,0,  0,0,0,  0,0,0],
+			  	   [0,0,0,  0,0,0,  0,0,0]];
+
+
+function genSudoku() {
+	document.getElementById("solution").innerHTML = "Veuillez patienter...";
+	let nbMask;
+	switch (document.getElementById("dificult").value) {
+		case "debutant":
+			nbMask = 46+Math.round(Math.random()*2);
+			break;
+		case "facile":
+			nbMask = 44+Math.round(Math.random()*2);
+			break;
+		case "comfirme":
+			nbMask = 46+Math.round(Math.random()*4);
+			break;
+		case "expert":
+			nbMask = 50+Math.round(Math.random()*4);
+			break;
+		case "diabolique":
+			nbMask = 54+Math.round(Math.random()*2);
+			break;
+	}
+	let sudokuMasked;
+	let sudokuComplet; 
+	let nbEssai = 0;
+	
+	let finish = false;
+
+	while(!finish) {
+		sudokuComplet = copySudoku(sudokuBlank);
+		finish = true;
+		for (let l=0;l<sudokuComplet.length;l++) {
+			for (let c=0;c<sudokuComplet[l].length;c++) {
+				let i = 0;
+				let number = genNumber();
+				while(isPresent(l,c,number) & i<18) {
+					number = genNumber()
+					i += 1;
+				}
+				if (isPresent(l,c,number)) {
+					finish = false;
+					l = sudokuComplet.length;
+					break;
+				}
+				sudokuComplet[l][c] = number;
+			}
+		}
+	}
+
+	let sudokuValid = false;
+	while (!sudokuValid) {
+
+		sudokuMasked = copySudoku(sudokuComplet)
+
+		for (let nb=0;nb<nbMask;nb++) {
+			let l = genNumber()-1;
+			let c = genNumber()-1;
+			while(sudokuMasked[l][c] == 0) {
+				l = genNumber()-1;
+				c = genNumber()-1;
+			}
+			sudokuMasked[l][c] = 0;
+		}
+
+		testRec(3);
+	}
+	let nbZero = 0;
+	for (let l=0;l<sudokuMasked.length;l++) {
+		for (let c=0;c<sudokuMasked[l].length;c++) {
+			if (sudokuMasked[l][c] == 0) {
+				nbZero += 1;
+			}
+		}
+	}
+	console.clear();
+	console.log(nbZero+" zero");
+
+	function testRec(limitTree) {
+		resolvSudoku(sudokuMasked,limitTree, (sudoku,msg) => {
+
+			if (msg != "THIS SUDOKU CANNOT BE RESOLVED" & msg != "FAUX") {
+				sudokuValid = true;
+				let str = "";
+				for (let l=0;l<sudokuMasked.length;l++) {
+					for (let c=0;c<sudokuMasked[l].length;c++) {
+						if (c%3 == 0) {
+							str += "&nbsp;&nbsp;";
+						}
+						str += sudokuMasked[l][c]+",";
+					}
+					str += "<br/>";
+					if ((l+1)%3 == 0) {
+						str += "<br/>";
+					}
+				}
+				document.getElementById("solution").innerHTML = str;
+			} else {
+				if (limitTree < 6) {
+					testRec(limitTree+1);
+				}
+			}
+		});
+	}
+
+	function isPresent(l,c,number) {
+		let present = false;
+		parcourBloc(getBloc(l,c),(lb,cb) => {
+			if (l != lb | c != cb) {
+				if (sudokuComplet[lb][cb] == number) {
+					present = true;
+				}
+			}
+		});
+		if (present) { return true;}
+
+		for (let i=0;i<sudokuComplet[l].length;i++) {
+			if (i != c) {
+				if (sudokuComplet[l][i] == number) {
+					return true;
+				}
+			}
+		}
+
+		for (let i=0;i<sudokuComplet.length;i++) {
+			if (i != l) {
+				if (sudokuComplet[i][c] == number) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+
+	}
+
+}
+
+</script>
