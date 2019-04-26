@@ -1,4 +1,31 @@
 <meta charset="utf-8">
+<style>
+	#solution {
+		display: none;
+	}
+	.cell {
+		width: 20px;
+	}
+	.espace {
+		width: 2px;
+		height: 2px;
+		border: 0px;
+		background-color: #000;
+	}
+	td {
+		vertical-align: middle;
+		text-align: center;
+		background-color: #FFF;
+	}
+
+	table, th, td {
+  		border: 1px solid black;
+	}
+
+	table {
+		background-color: #000;
+	}
+</style>
 <center>
 	Niveau de difficulté : 
 	<select id="dificult">
@@ -9,7 +36,11 @@
 		<option value="diabolique">Diabolique</option>
 	</select>
 	<br/>
+	<br/>
 	<input type="button" onclick="genSudoku()" value="Génerer le sudoku">
+	<br/><br/>
+	<div id="graphic"></div>
+	<div id="msg"></div>
 	<div id="solution"></div>
 </center>
 <script src="sudoku.js"></script>
@@ -62,11 +93,11 @@ function genSudoku() {
 			for (let c=0;c<sudokuComplet[l].length;c++) {
 				let i = 0;
 				let number = genNumber();
-				while(isPresent(l,c,number) & i<18) {
+				while(isPresent(l,c,number,sudokuComplet) & i<18) {
 					number = genNumber()
 					i += 1;
 				}
-				if (isPresent(l,c,number)) {
+				if (isPresent(l,c,number,sudokuComplet)) {
 					finish = false;
 					l = sudokuComplet.length;
 					break;
@@ -123,6 +154,28 @@ function genSudoku() {
 					}
 				}
 				document.getElementById("solution").innerHTML = str;
+				str = "<table>";
+				for (let l=0;l<sudokuMasked.length;l++) {
+					str += "<tr>";
+					for (let c=0;c<sudokuMasked[l].length;c++) {
+						if (c%3 == 0 & c > 0) {
+							str += "<td class='espace'></td>";
+						}
+						if (sudokuMasked[l][c] == 0) {
+							str += "<td><input id='"+l+"-"+c+"' class='cell' type='text' id='"+l+"-"+c+"'/></td>";
+						} else {
+							str += "<td style='background-color: #2bd1b8;' id='"+l+"-"+c+"' class='cell'>"+sudokuMasked[l][c]+"</td>";
+						}
+					}
+					str += "</tr>";
+					if ((l+1)%3 == 0 & l < 8) {
+						str += "<tr><td colspan='13' class='espace'></td></tr>";
+					}
+				}
+				str += "</table>";
+				str += "<br/><input type='button' value='Valider' onclick='valid()'/><br/>";
+				str += "<br/><input type='button' value='Version copiable' onclick='displayOrHideCopiable()'/>";
+				document.getElementById("graphic").innerHTML = str;
 			} else {
 				if (limitTree < 6) {
 					testRec(limitTree+1);
@@ -130,38 +183,86 @@ function genSudoku() {
 			}
 		});
 	}
+}
 
-	function isPresent(l,c,number) {
-		let present = false;
-		parcourBloc(getBloc(l,c),(lb,cb) => {
-			if (l != lb | c != cb) {
-				if (sudokuComplet[lb][cb] == number) {
-					present = true;
-				}
+function displayOrHideCopiable() {
+	console.log(document.getElementById("solution").style.display);
+	if (document.getElementById("solution").style.display == "block") {
+		document.getElementById("solution").style.display = "none";
+	} else {
+		document.getElementById("solution").style.display = "block";
+	}
+}
+
+function valid() {
+	let sudoku = [[0,0,0, 0,0,0, 0,0,0],
+				  [0,0,0, 0,0,0, 0,0,0],
+				  [0,0,0, 0,0,0, 0,0,0],
+
+				  [0,0,0, 0,0,0, 0,0,0],
+				  [0,0,0, 0,0,0, 0,0,0],
+				  [0,0,0, 0,0,0, 0,0,0],
+
+				  [0,0,0, 0,0,0, 0,0,0],
+				  [0,0,0, 0,0,0, 0,0,0],
+				  [0,0,0, 0,0,0, 0,0,0]];
+
+	for (let l=0;l<9;l++) {
+		for (let c=0;c<9;c++) {
+			let cell = document.getElementById(l+"-"+c);
+			if (cell.innerHTML != "") {
+				cell = cell.innerHTML;
+			} else {
+				cell = cell.value;
 			}
-		});
-		if (present) { return true;}
-
-		for (let i=0;i<sudokuComplet[l].length;i++) {
-			if (i != c) {
-				if (sudokuComplet[l][i] == number) {
-					return true;
-				}
+			if (cell == "") {
+				document.getElementById("msg").innerHTML = "<font color='red' size='3'>Vous n'avez pas tous rentré</font>";
+				return;
+			}
+			if (isNaN(parseInt(cell))) {
+				document.getElementById("msg").innerHTML = "<font color='red' size='3'>Vous n'avez pas rentré que des données valide</font>";
+				return;
+			}
+			sudoku[l][c] = parseInt(cell);
+		}
+	}
+	for (let l=0;l<9;l++) {
+		for (let c=0;c<9;c++) {
+			if (isPresent(l,c,sudoku[l][c],sudoku)) {
+				document.getElementById("msg").innerHTML = "<font color='red' size='3'>Sudoku incorrect</font>";
+				return;
 			}
 		}
+	}
+	document.getElementById("msg").innerHTML = "<font color='green' size='3'>Sudoku réussi!</font>";
+}
 
-		for (let i=0;i<sudokuComplet.length;i++) {
-			if (i != l) {
-				if (sudokuComplet[i][c] == number) {
-					return true;
-				}
+function isPresent(l,c,number,tab) {
+	let present = false;
+	parcourBloc(getBloc(l,c),(lb,cb) => {
+		if (l != lb | c != cb) {
+			if (tab[lb][cb] == number) {
+				present = true;
 			}
 		}
-
-		return false;
-
+	});
+	if (present) { return true;}
+	for (let i=0;i<tab[l].length;i++) {
+		if (i != c) {
+			if (tab[l][i] == number) {
+				return true;
+			}
+		}
 	}
 
+	for (let i=0;i<tab.length;i++) {
+		if (i != l) {
+			if (tab[i][c] == number) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 </script>
