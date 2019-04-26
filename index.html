@@ -2,7 +2,9 @@
 <center>
 	<h1>Sudoku :</h1>
 	<br/>
-	Limite de l'arbre de possibilitées : <input type="text" id="limitTree" value="2"/>
+	Limite de l'arbre de possibilitées :
+	<select id="limitTree">
+	</select>
 	<br/>
 	<br/>
 	<textarea style="width: 250px; height: 250px;" id="sudoku"></textarea>
@@ -11,9 +13,17 @@
 	<div id="solution"></div>
 </center>
 
-<script src="/sudoku.js"></script>
+<script src="sudoku.js"></script>
 <script>
 "use strict";
+let selectStr = "";
+for (let i=0;i<=10;i++) {
+	selectStr += "<option value='"+i+"'>"+i+"</option>";
+}
+selectStr += "<option value='infinity'>Sans limite</option>";
+
+document.getElementById("limitTree").innerHTML = selectStr;
+document.getElementById("limitTree").value = 3;
 
 function getSolution(){
 	let sudoku = [];
@@ -44,7 +54,7 @@ function getSolution(){
 		}
 	}
 
-	const limitTree = parseInt(document.getElementById("limitTree").value);
+	const limitTree = (document.getElementById("limitTree").value != "infinity" ? parseInt(document.getElementById("limitTree").value) : "infinity");
 
 	resolvSudoku(sudoku,limitTree, (sudoku,msg) => {
 		let str = "";

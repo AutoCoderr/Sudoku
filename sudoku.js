@@ -24,7 +24,6 @@ let startTimeSudoKu;
 
 
 function resolvSudoku(unSudoku,unLimitTree,displaySudokuCallBack){
-	console.log("limitTree => "+unLimitTree);
 	nbEmbronchements = {};
 	startTimeSudoKu = new Date().getTime();
 	if (unSudoku.length != 9) {
@@ -45,6 +44,8 @@ function resolvSudoku(unSudoku,unLimitTree,displaySudokuCallBack){
 	console.clear();
 
 	limitTree = unLimitTree;
+
+	//console.log("limitTree => "+limitTree);
 
 	let resolved = false;;
 
@@ -149,7 +150,7 @@ function resolvSudoku(unSudoku,unLimitTree,displaySudokuCallBack){
 
 		if (oneFound == false & resolved == false) {
 			if (branchs == null) {
-				if (profondeurBranch < limitTree) {
+				if (profondeurBranch < limitTree | limitTree == "infinity") {
 					branchs = new Object();
 					currentBranch = branchs;
 					newBranch(currentBranch);
@@ -165,11 +166,11 @@ function resolvSudoku(unSudoku,unLimitTree,displaySudokuCallBack){
 			} else {
 				if (currentBranch.nbEssai == currentBranch.essais.length) {
 					if (typeof(currentBranch.parent) == "undefined") {
-						displaySudoku(sudoku,"THIS SUDOKU CANNOT BE RESOLVED");
 						nbBranch = null;
 						branchs = null;
     					currentBranch = null;
     					profondeurBranch = 0;
+						displaySudoku(sudoku,"THIS SUDOKU CANNOT BE RESOLVED");
 						return;
 					} else {
 						currentBranch = currentBranch.parent;
@@ -181,7 +182,7 @@ function resolvSudoku(unSudoku,unLimitTree,displaySudokuCallBack){
 					}
 				} else {
 					console.log("profondeurBranch => "+profondeurBranch+" ; limitTree => "+limitTree+" ; thereAreEmpty => "+thereAreEmpty());
-					if (typeof(currentBranch.essais[currentBranch.nbEssai-1].branch) == "undefined" & profondeurBranch < limitTree & !thereAreEmpty()) {
+					if (typeof(currentBranch.essais[currentBranch.nbEssai-1].branch) == "undefined" & (profondeurBranch < limitTree | limitTree == "infinity") & !thereAreEmpty()) {
 						const nb = currentBranch.nbEssai;
 						currentBranch.essais[nb-1].branch = new Object();
 						currentBranch.essais[nb-1].branch.parent = currentBranch;
@@ -237,11 +238,11 @@ function resolvSudoku(unSudoku,unLimitTree,displaySudokuCallBack){
 function verifTerminedTree() {
 	if (currentBranch.nbEssai == currentBranch.essais.length) {
 		if (typeof(currentBranch.parent) == "undefined") {
-			displaySudoku(sudoku,"THIS SUDOKU CANNOT BE RESOLVED");
 			nbBranch = null;
 			branchs = null;
     		currentBranch = null;
     		profondeurBranch = 0;
+			displaySudoku(sudoku,"THIS SUDOKU CANNOT BE RESOLVED");
 			return false;
 		} else {
 			currentBranch = currentBranch.parent;
@@ -478,6 +479,7 @@ function newBranch(currentBranch) {
 	for (let i=0;i<sudoku[currentBranch.LA][currentBranch.CA].length;i++) {
 		currentBranch.essais.push({case: "A", val:sudoku[currentBranch.LA][currentBranch.CA][i],});
 	}
+	console.log("LB => "+currentBranch.LB+" ; CB => "+currentBranch.CB);
 	for (let i=0;i<sudoku[currentBranch.LB][currentBranch.CB].length;i++) {
 		currentBranch.essais.push({case: "B", val:sudoku[currentBranch.LB][currentBranch.CB][i]});
 	}
